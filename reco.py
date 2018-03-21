@@ -10,7 +10,7 @@ import time
 import numpy
 import os
 
-
+# test commit message
 # opportunities table
 opportunities ='''
 SELECT o.created_date, o.contract_signed_on_c, o.contract__sent__date___c, o.id, o.account_id, o.name, o.owner_id, a.uuid___c, o.contract_uuid_c
