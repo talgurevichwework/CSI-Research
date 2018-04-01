@@ -13,6 +13,7 @@ import os
 def clean_up(text, strip_chars=[], replace_extras={}):
     """
     :type text str
+    :type strip_chars list
     :type replace_extras dict
     *************************
     strip_chars: optional arg
@@ -68,6 +69,9 @@ def clean_up(text, strip_chars=[], replace_extras={}):
 
 
 #tiding the log file exported from leg entries, assuming it is filtered for a relevant time frame and "Failed sending Contract event"
+with open('logfile.csv', 'a') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(['event', 'exception', 'company', 'contract'])
 logfile = open('/Users/tgurevich/Downloads/file.txt','r')
 for row in logfile:
     a=str.find(row, 'Failed sending Contract event to SF with')
