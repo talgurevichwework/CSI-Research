@@ -73,6 +73,7 @@ with open('logfile.csv', 'a') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(['event', 'exception', 'company', 'contract'])
 logfile = open('/Users/tgurevich/Downloads/file.txt','r')
+unique_companies = []
 for row in logfile:
     a=str.find(row, 'Failed sending Contract event to SF with')
     failed_note=row[:a]
@@ -96,11 +97,18 @@ for row in logfile:
         retry= False
     else:
         retry = True
-
     if retry == False and has_event !=-1:
         with open('logfile.csv', 'a') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow([event, exception, company, contract])
+            if company not in unique_companies:
+                unique_companies.append(company)
+
+with open('unique_companies.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile)
+    for item in unique_companies:
+            writer.writerow([item])
+
 # print(failed_note)
 # print('-----------')
 # print(payload)
