@@ -72,8 +72,9 @@ def clean_up(text, strip_chars=[], replace_extras={}):
 with open('logfile.csv', 'a') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(['event', 'exception', 'company', 'contract'])
-logfile = open('/Users/tgurevich/Downloads/file.txt','r')
+logfile = open('file.log','r')
 unique_companies = []
+unique_contracts = []
 for row in logfile:
     a=str.find(row, 'Failed sending Contract event to SF with')
     failed_note=row[:a]
@@ -85,13 +86,13 @@ for row in logfile:
     e=str.find(row,'retry')
     retrytext = row[e:]
     f=str.find(row, 'company_uuid')
-    company=row[f+17:f+60]
+    company=row[f+15:f+54]
     g=str.find(row,'membership_agreement_uuid')
-    contract = row[g+30:g+70]
+    contract = row[g+28:g+68]
     contract = clean_up(contract)
     company = clean_up(company)
     has_event = str.find(payload, 'event_name')
-    event = payload[has_event+16:has_event+36]
+    event = payload[has_event+13:has_event+32]
     event = clean_up(event)
     if e == -1:
         retry= False
@@ -103,11 +104,18 @@ for row in logfile:
             writer.writerow([event, exception, company, contract])
             if company not in unique_companies:
                 unique_companies.append(company)
+            if contract not in unique_contracts:
+                unique_contracts.append(contract)
 
 with open('unique_companies.csv', 'w') as csvfile:
     writer = csv.writer(csvfile)
     for item in unique_companies:
             writer.writerow([item])
+# with open('unique_contracts.csv', 'w') as csvfile:
+#     writer = csv.writer(csvfile)
+#     for item in unique_contracts:
+#             writer.writerow([item])
+
 
 # print(failed_note)
 # print('-----------')
