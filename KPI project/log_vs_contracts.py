@@ -92,6 +92,7 @@ for row in logfile:
     contract = clean_up(contract)
     company = clean_up(company)
     has_event = str.find(payload, 'event_name')
+    has_contract = str.find(payload, 'membership_agreement_uuid')
     event = payload[has_event+13:has_event+32]
     event = clean_up(event)
     if e == -1:
@@ -104,21 +105,15 @@ for row in logfile:
             writer.writerow([event, exception, company, contract])
             if company not in unique_companies:
                 unique_companies.append(company)
-            if contract not in unique_contracts:
-                unique_contracts.append(contract)
+            if has_contract !=-1:
+                if contract not in unique_contracts:
+                    unique_contracts.append(contract)
 
 with open('unique_companies.csv', 'w') as csvfile:
     writer = csv.writer(csvfile)
     for item in unique_companies:
             writer.writerow([item])
-# with open('unique_contracts.csv', 'w') as csvfile:
-#     writer = csv.writer(csvfile)
-#     for item in unique_contracts:
-#             writer.writerow([item])
-
-
-# print(failed_note)
-# print('-----------')
-# print(payload)
-# print('-----------')
-# print(exception)
+with open('unique_contracts.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile)
+    for item in unique_contracts:
+            writer.writerow([item])
