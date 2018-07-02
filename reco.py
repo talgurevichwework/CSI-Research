@@ -26,7 +26,6 @@ opp.to_csv('opportunities_output.csv')
 memberships = '''
 SELECT *
 from spaceman_public.membership_agreements ma
-where ma.signed_at > '2017-12-31'
 and ma.signed_at < '2018-02-01'
 '''
 ma_ag = we.get_tbl_query(memberships)
