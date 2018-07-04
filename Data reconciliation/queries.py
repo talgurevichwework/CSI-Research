@@ -1,6 +1,6 @@
-def create_salesforce_closelost_query(time_period, start_date, end_date):
+def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_moveout, 
+		select contacts.account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, 
 		date_trunc (lower('{time_period}'), opportunities.close_date) as close_date
 		from salesforce_v2.opportunity as opportunities
 		left join salesforce_v2.contact as contacts on opportunities.account_id=contacts.account_id
@@ -10,7 +10,7 @@ def create_salesforce_closelost_query(time_period, start_date, end_date):
 
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_movein, 
+		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, 
 		date_trunc (lower('{time_period}'), opportunities.close_date) as close_date
 		from salesforce_v2.opportunity as opportunities
 		left join salesforce_v2.contact as contacts on opportunities.account_id=contacts.account_id
@@ -24,7 +24,7 @@ def create_looker_query(time_period, start_date, end_date):
 		        '{time_period}' as time_grouping,
 		        'no' as include_jv_markets,
 		        'Global' as select_grouping,
-		        date_trunc (lower('{time_period}'), v.date_reserved_local)::date as close_date,
+		        date_trunc (lower('{time_period}'), v.date_reserved_local)::date as date,
 		      v.account_uuid,
 		      v.account_name,
 		      case
@@ -171,6 +171,7 @@ def create_looker_query(time_period, start_date, end_date):
 		SELECT 
 			new_sales_reporting.account_name  AS "new_sales_reporting.account_name",
 			accounts.account_uuid  AS "accounts.account_uuid",
+			new_sales_reporting.date as "close_date",
 			COALESCE(SUM(new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.churn_notice",
 			COALESCE(SUM(new_sales_reporting.downgrades), 0) AS "new_sales_reporting.downgrades",
 			COALESCE(SUM(new_sales_reporting.upgrades), 0) AS "new_sales_reporting.upgrades",
@@ -184,7 +185,7 @@ def create_looker_query(time_period, start_date, end_date):
 
 		WHERE 
 			(((new_sales_reporting.date) >= (TIMESTAMP '{start_date}') AND (new_sales_reporting.date) < (TIMESTAMP '{end_date}')))
-		GROUP BY 1,2
+		GROUP BY 1,2,3
 		ORDER BY 3 DESC
 		limit 50
 		''')
