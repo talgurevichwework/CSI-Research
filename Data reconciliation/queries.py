@@ -1,20 +1,18 @@
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, 
-		date_trunc (lower('{time_period}'), opportunities.close_date) as close_date
+		select contacts.account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost
 		from salesforce_v2.opportunity as opportunities
-		left join salesforce_v2.contact as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Lost' and close_date>=TIMESTAMP '2018-06-12' and close_date<TIMESTAMP '2018-06-13'
-		group by contacts.account_uuid_c, opportunities.close_date
+		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
+		where stage_name='Closed Lost' and close_date>=TIMESTAMP '{start_date}' and close_date<=TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0
+		group by contacts.account_uuid_c
 		''')
 
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, 
-		date_trunc (lower('{time_period}'), opportunities.close_date) as close_date
+		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon		
 		from salesforce_v2.opportunity as opportunities
-		left join salesforce_v2.contact as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Won' and close_date>=TIMESTAMP '2018-06-12' and close_date<TIMESTAMP '2018-06-13'
+		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
+		where stage_name='Closed Won' and close_date>=TIMESTAMP '{start_date}' and close_date<=TIMESTAMP '{end_date}'
 		group by contacts.account_uuid_c, opportunities.close_date
 		''')
 
@@ -172,20 +170,11 @@ def create_looker_query(time_period, start_date, end_date):
 			new_sales_reporting.account_name  AS "new_sales_reporting.account_name",
 			accounts.account_uuid  AS "accounts.account_uuid",
 			new_sales_reporting.date as "close_date",
-			COALESCE(SUM(new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.churn_notice",
-			COALESCE(SUM(new_sales_reporting.downgrades), 0) AS "new_sales_reporting.downgrades",
-			COALESCE(SUM(new_sales_reporting.upgrades), 0) AS "new_sales_reporting.upgrades",
-			COALESCE(SUM(new_sales_reporting.upgrades + new_sales_reporting.new_sales + new_sales_reporting.downgrades + new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.net_sales_1",
-			COALESCE(SUM(new_sales_reporting.new_sales), 0) AS "new_sales_reporting.new_sales",
-			COUNT(DISTINCT new_sales_reporting.account_uuid ) AS "new_sales_reporting.count_accounts",
-			COALESCE(SUM(new_sales_reporting.downgrades + new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.total_desk_loss_1",
-			COALESCE(SUM(new_sales_reporting.upgrades + new_sales_reporting.new_sales), 0) AS "new_sales_reporting.total_desk_sales_1"
+			COALESCE(SUM(new_sales_reporting.upgrades + new_sales_reporting.new_sales + new_sales_reporting.downgrades + new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.net_sales_1"
 		FROM new_sales_reporting
 		LEFT JOIN dw.mv_dim_account  AS accounts ON new_sales_reporting.account_uuid=accounts.account_uuid 
-
 		WHERE 
 			(((new_sales_reporting.date) >= (TIMESTAMP '{start_date}') AND (new_sales_reporting.date) < (TIMESTAMP '{end_date}')))
 		GROUP BY 1,2,3
 		ORDER BY 3 DESC
-		limit 50
 		''')
