@@ -42,10 +42,9 @@ comp_df['new_sales_reporting_net_sales_1']= comp_df['new_sales_reporting_net_sal
 comp_df['Sf Looker Absolute Difference'] = abs(comp_df['Net Desk Change'] - comp_df['new_sales_reporting_net_sales_1'])
 
 comp_df['accounts_account_uuid'] = comp_df['accounts_account_uuid'].fillna(comp_df['account_uuid_c'])
-comp_df['close_date_x'] = comp_df['close_date_x'].fillna(comp_df['close_date_y'])
 
-comp_df = comp_df[['accounts_account_uuid', 'close_date_x', 'Net Desk Change', 'new_sales_reporting_net_sales_1', 'Sf Looker Absolute Difference']]
-comp_df.rename(index=str, columns={"accounts_account_uuid": "Account UUID","close_date_x": "Close Date", "Net Desk Change": "SF Net Desk Change", 'new_sales_reporting_net_sales_1':"Looker Net Desk Change"}, inplace=True)
+comp_df = comp_df[['accounts_account_uuid', 'new_sales_reporting_net_sales_1', 'Sf Looker Absolute Difference']]
+comp_df.rename(index=str, columns={"accounts_account_uuid": "Account UUID", "Net Desk Change": "SF Net Desk Change", 'new_sales_reporting_net_sales_1':"Looker Net Desk Change"}, inplace=True)
 
 return_df = comp_df[comp_df['Sf Looker Absolute Difference'] != 0]
 return_df
