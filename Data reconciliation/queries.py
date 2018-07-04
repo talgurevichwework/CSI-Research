@@ -1,11 +1,30 @@
-# end_date is NOT inclusive
+def create_salesforce_closelost_query(time_period, start_date, end_date):
+	return(f'''
+		select contacts.account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_moveout, 
+		date_trunc (lower('{time_period}'), opportunities.close_date) as close_date
+		from salesforce_v2.opportunity as opportunities
+		left join salesforce_v2.contact as contacts on opportunities.account_id=contacts.account_id
+		where stage_name='Closed Lost' and close_date>=TIMESTAMP '2018-06-12' and close_date<TIMESTAMP '2018-06-13'
+		group by contacts.account_uuid_c, opportunities.close_date
+		''')
+
+def create_salesforce_closedwon_query(time_period, start_date, end_date):
+	return(f'''
+		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_movein, 
+		date_trunc (lower('{time_period}'), opportunities.close_date) as close_date
+		from salesforce_v2.opportunity as opportunities
+		left join salesforce_v2.contact as contacts on opportunities.account_id=contacts.account_id
+		where stage_name='Closed Won' and close_date>=TIMESTAMP '2018-06-12' and close_date<TIMESTAMP '2018-06-13'
+		group by contacts.account_uuid_c, opportunities.close_date
+		''')
+
 def create_looker_query(time_period, start_date, end_date):
 	return(f'''
 		WITH new_sales_reporting AS (select
 		        '{time_period}' as time_grouping,
 		        'no' as include_jv_markets,
 		        'Global' as select_grouping,
-		        date_trunc (lower('{time_period}'), v.date_reserved_local)::date as date,
+		        date_trunc (lower('{time_period}'), v.date_reserved_local)::date as close_date,
 		      v.account_uuid,
 		      v.account_name,
 		      case
@@ -167,4 +186,5 @@ def create_looker_query(time_period, start_date, end_date):
 			(((new_sales_reporting.date) >= (TIMESTAMP '{start_date}') AND (new_sales_reporting.date) < (TIMESTAMP '{end_date}')))
 		GROUP BY 1,2
 		ORDER BY 3 DESC
+		limit 50
 		''')
