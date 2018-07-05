@@ -1,19 +1,19 @@
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost
+		select contacts.account_uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
 		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Lost' and close_date>=TIMESTAMP '{start_date}' and close_date<=TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0
-		group by contacts.account_uuid_c
+		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0
+		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon		
+		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date	
 		from salesforce_v2.opportunity as opportunities
 		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Won' and close_date>=TIMESTAMP '{start_date}' and close_date<=TIMESTAMP '{end_date}'
-		group by contacts.account_uuid_c, opportunities.close_date
+		where stage_name='Closed Won' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}'
+		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
 def create_looker_query(time_period, start_date, end_date):
