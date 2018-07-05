@@ -2,13 +2,13 @@ from we_module.we import We
 import queries
 we = We(True)
 import pandas as pd
-
+import csv 
 
 # Variables:
 start_date = '2018-06-03'
 end_date = '2018-06-10'# Not inclusive 
 time_period = 'Week'
-output_file_destination = '~/Desktop/output.csv'
+output_file_destination = './Reports/output.csv'
 
 # Get query results as pandas dfs
 looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date, end_date))
@@ -36,4 +36,13 @@ comp_df.rename(index=str, columns={"accounts_account_uuid": "Account UUID", "new
 
 return_df = comp_df[comp_df['Sf Looker Absolute Difference'] != 0]
 return_df.to_csv(output_file_destination, encoding='utf-8', index=False)
-print(return_df)
+
+looker_sum = comp_df['Looker Net Desk Change'].sum()
+sf_sum = comp_df['Sf Net Desk Change'].sum()
+sums = [looker_sum, sf_sum]
+with open(output_file_destination, 'a', newline='') as f:
+	fieldnames = ['Looker Net Desk Change', 'Sf Net Desk Change']
+	writer = csv.writer(f)
+	writer.writerow(fieldnames)
+	writer.writerow([looker_sum, sf_sum])
+
