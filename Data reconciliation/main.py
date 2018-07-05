@@ -8,7 +8,7 @@ import csv
 start_date = '2018-06-03'
 end_date = '2018-06-10'# Not inclusive 
 time_period = 'Week'
-output_file_destination = './Reports/output.csv'
+output_file_destination = f'./Reports/output{start_date}to{end_date}.csv'
 
 # Get query results as pandas dfs
 looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date, end_date))
