@@ -16,8 +16,8 @@ opportunities ='''
 SELECT o.created_date, o.contract_signed_on_c, o.contract__sent__date___c, o.id, o.account_id, o.name, o.owner_id, a.uuid___c, o.contract_uuid_c
 from salesforce._opportunity o
 join salesforce._account a on a.id = o.account_id
-where o.contract_signed_on_c > '2017-12-31'
-and o.contract_signed_on_c < '2018-02-01'
+where o.contract_signed_on_c >= '2018-04-01'
+and o.contract_signed_on_c <= '2018-04-30'
 '''
 opp = we.get_tbl_query(opportunities)
 opp.to_csv('opportunities_output.csv')
@@ -26,8 +26,8 @@ opp.to_csv('opportunities_output.csv')
 memberships = '''
 SELECT *
 from spaceman_public.membership_agreements ma
-where ma.signed_at > '2017-12-31'
-and ma.signed_at < '2018-02-01'
+where ma.signed_at >= '2018-04-01'
+and ma.signed_at <= '2018-04-30'
 '''
 ma_ag = we.get_tbl_query(memberships)
 ma_ag.to_csv('memberships_output.csv')
@@ -36,8 +36,8 @@ ma_ag.to_csv('memberships_output.csv')
 transations = '''
 SELECT *
 from dw.v_transaction v
-where v.date_reserved_local > '2017-12-31'
-and  v.date_reserved_local< '2018-02-01'
+where v.date_reserved_local >= '2018-04-01'
+and  v.date_reserved_local<= '2018-04-30'
 '''
 trans = we.get_tbl_query(transations)
 trans.to_csv('transations.csv')
@@ -46,8 +46,8 @@ trans.to_csv('transations.csv')
 reservations = '''
 SELECT *
 from spaceman_public.reservations r
-where date(r.created_at) > '2017-12-31'
-and date(r.created_at) < '2018-02-01'
+where date(r.created_at) >= '2018-04-01'
+and date(r.created_at) <= '2018-04-3-'
 '''
 res = we.get_tbl_query(reservations)
 res.to_csv('reservations_output.csv')
@@ -56,8 +56,8 @@ res.to_csv('reservations_output.csv')
 spaceman_account = '''
 SELECT *
 from spaceman_public.accounts a
-where a.updated_at > '2017-12-31'
-and a.updated_at < '2018-02-01'
+where a.updated_at >= '2018-04-01'
+and a.updated_at <= '2018-04-31'
 '''
 space_accounts = we.get_tbl_query(spaceman_account)
 space_accounts.to_csv('SMAccounts_output.csv')
@@ -73,7 +73,7 @@ b=set(trans['account_uuid'])
 #find all accounts in opps but no i looker
 c=a.difference(b)
 print(len(c), 'accounts are missing from looker this timeframe')
-for n in c:
+
     #run on each account, find if it is in any of the above variables (of no sent, no contract, or no signed)
     #extract the table to a new file
 

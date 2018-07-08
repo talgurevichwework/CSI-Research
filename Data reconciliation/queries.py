@@ -7,9 +7,16 @@ def create_salesforce_closedlost_query(time_period, start_date, end_date):
 		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
+def create_sapi_reuserecords_query(time_period, start_date, end_date):
+	return(f'''
+		select *
+		from sales_api_public.opportunity_reuse_records as opr
+		where date_trunc(lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}')
+	''')
+
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date	
+		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
 		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
 		where stage_name='Closed Won' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}'
@@ -166,14 +173,14 @@ def create_looker_query(time_period, start_date, end_date):
 		        group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
 		        order by 2
 		      )
-		SELECT 
+		SELECT
 			new_sales_reporting.account_name  AS "new_sales_reporting.account_name",
 			accounts.account_uuid  AS "accounts.account_uuid",
 			new_sales_reporting.date as "close_date",
 			COALESCE(SUM(new_sales_reporting.upgrades + new_sales_reporting.new_sales + new_sales_reporting.downgrades + new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.net_sales_1"
 		FROM new_sales_reporting
-		LEFT JOIN dw.mv_dim_account  AS accounts ON new_sales_reporting.account_uuid=accounts.account_uuid 
-		WHERE 
+		LEFT JOIN dw.mv_dim_account  AS accounts ON new_sales_reporting.account_uuid=accounts.account_uuid
+		WHERE
 			(((new_sales_reporting.date) >= (TIMESTAMP '{start_date}') AND (new_sales_reporting.date) < (TIMESTAMP '{end_date}')))
 		GROUP BY 1,2,3
 		ORDER BY 3 DESC

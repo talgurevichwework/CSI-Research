@@ -2,11 +2,11 @@ from we_module.we import We
 import queries
 we = We(True)
 import pandas as pd
-import csv 
+import csv
 
 # Variables:
 start_date = '2018-06-03'
-end_date = '2018-06-10'# Not inclusive 
+end_date = '2018-06-10'# Not inclusive
 time_period = 'Week'
 output_file_destination = f'./Reports/output{start_date}to{end_date}.csv'
 
@@ -14,6 +14,7 @@ output_file_destination = f'./Reports/output{start_date}to{end_date}.csv'
 looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date, end_date))
 cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query(time_period, start_date, end_date))
 cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query(time_period, start_date, end_date))
+re_df = we.get_tbl_query(queries.create_sapi_reuserecords_query(time_period, start_date, end_date))
 
 # Merge closed won and closed lost tables
 sf_df = cl_df.merge(cw_df, left_on=['account_uuid_c'], right_on=['account_uuid_c'], how='outer')
@@ -45,4 +46,3 @@ with open(output_file_destination, 'a', newline='') as f:
 	writer = csv.writer(f)
 	writer.writerow(fieldnames)
 	writer.writerow([looker_sum, sf_sum])
-
