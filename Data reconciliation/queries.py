@@ -11,7 +11,7 @@ def create_sapi_reuserecords_query(time_period, start_date, end_date):
 	return(f'''
 		select *
 		from sales_api_public.opportunity_reuse_records as opr
-		where date_trunc(lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}')
+		where date_trunc(lower('{time_period}'), opr.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opr.created_at)::date<TIMESTAMP '{end_date}'
 	''')
 
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
