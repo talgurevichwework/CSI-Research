@@ -36,6 +36,25 @@ def create_salesforce_closedwon_query(time_period, start_date, end_date):
 		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
+def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
+	return(f'''
+		with ma as (
+			select *
+			from spaceman_public.membership_agreements ma),
+		r as (
+			select *
+			from spaceman_public.reservations r),
+		cr as (
+			select *
+			from spaceman_public.change_requests cr)
+		select *
+		from cr
+		join ma on ma.id = cr.membership_agreement_id
+		join r on r.id = cr.reservation_id
+		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
+		and cr.reservation_type = 'PrimaryReservation'
+		''')
+
 def create_looker_query(time_period, start_date, end_date):
 	return(f'''
 		WITH new_sales_reporting AS (select
