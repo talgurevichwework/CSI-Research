@@ -10,6 +10,7 @@ end_date = '2018-06-10'# Not inclusive
 time_period = 'Week'
 output_file_destination = f'./Reports/output{start_date}to{end_date}.csv'
 reuse_file_destination = f'./Reports/reuse{start_date}to{end_date}.csv'
+fulloutput_file_destination = f'./Reports/fulloutput{start_date}to{end_date}.csv'
 
 # Get query results as pandas dfs
 looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date, end_date))
@@ -53,3 +54,8 @@ with open(output_file_destination, 'a', newline='') as f:
 
 re_comp_df = re_df.merge(return_df, how='right', left_on='company_uuid', right_on='Account UUID')
 re_comp_df.to_csv(reuse_file_destination, encoding='utf-8', index=False)
+
+sm_df.columns=[sm_df.columns[i]+str(i) for i in range(len(sm_df.columns))]
+re_comp_df.merge(sm_df, how='left', left_on='Account UUID', right_on='account_uuid14')
+re_comp_df.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
+
