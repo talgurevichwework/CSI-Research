@@ -16,6 +16,8 @@ looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date
 cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query(time_period, start_date, end_date))
 cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query(time_period, start_date, end_date))
 re_df = we.get_tbl_query(queries.create_sapi_reuserecords_query(time_period, start_date, end_date))
+res_df = we.get_tbl_query(queries.create_spaceman_reservations_query(time_period, start_date, end_date))
+ma_df = we.get_tbl_query(queries.create_spaceman_membershipagreements_query(time_period, start_date, end_date))
 
 # Merge closed won and closed lost tables
 sf_df = cl_df.merge(cw_df, left_on=['account_uuid_c'], right_on=['account_uuid_c'], how='outer')

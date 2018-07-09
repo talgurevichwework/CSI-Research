@@ -13,6 +13,19 @@ def create_sapi_reuserecords_query(time_period, start_date, end_date):
 		from sales_api_public.opportunity_reuse_records as opr
 		where date_trunc(lower('{time_period}'), opr.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opr.created_at)::date<TIMESTAMP '{end_date}'
 	''')
+def create_spaceman_reservations_query(time_period, start_date, end_date):
+	return(f'''
+		select *
+		from spaceman_public.reservations r
+		where date_trunc(lower('{time_period}'), r.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), r.created_at)::date<TIMESTAMP '{end_date}'
+	''')
+
+def create_spaceman_membershipagreements_query(time_period, start_date, end_date):
+	return(f'''
+		select *
+		from spaceman_public.membership_agreements ma
+		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
+	''')
 
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
