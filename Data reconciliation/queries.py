@@ -72,8 +72,8 @@ def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 			cr.reservation_ended_on,
 			r.description as reservable
 		from cr
-		join ma on ma.id = cr.membership_agreement_id
-		join r on r.id = cr.reservation_id
+		full join ma on ma.id = cr.membership_agreement_id
+		full join r on r.id = cr.reservation_id
 		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
 		and cr.reservation_type = 'PrimaryReservation'
 		''')
