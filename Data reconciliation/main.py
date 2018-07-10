@@ -17,8 +17,8 @@ looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date
 cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query(time_period, start_date, end_date))
 cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query(time_period, start_date, end_date))
 re_df = we.get_tbl_query(queries.create_sapi_reuserecords_query(time_period, start_date, end_date))
-res_df = we.get_tbl_query(queries.create_spaceman_reservations_query(time_period, start_date, end_date))
-ma_df = we.get_tbl_query(queries.create_spaceman_membershipagreements_query(time_period, start_date, end_date))
+#res_df = we.get_tbl_query(queries.create_spaceman_reservations_query(time_period, start_date, end_date))
+#ma_df = we.get_tbl_query(queries.create_spaceman_membershipagreements_query(time_period, start_date, end_date))
 sm_df = we.get_tbl_query(queries.create_spaceman_r_cr_ma_query(time_period, start_date, end_date))
 
 # Merge closed won and closed lost tables
@@ -53,9 +53,9 @@ with open(output_file_destination, 'a', newline='') as f:
 	writer.writerow([looker_sum, sf_sum])
 
 re_comp_df = re_df.merge(return_df, how='right', left_on='company_uuid', right_on='Account UUID')
+re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found']]
 re_comp_df.to_csv(reuse_file_destination, encoding='utf-8', index=False)
 
-sm_df.columns=[sm_df.columns[i]+str(i) for i in range(len(sm_df.columns))]
-re_comp_df.merge(sm_df, how='left', left_on='Account UUID', right_on='account_uuid14')
+re_comp_df = re_comp_df.merge(sm_df, how='left', left_on='Account UUID', right_on='account_uuid')
+re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found', 'ma_uuid', 'sf_opportunity_id', 'reservation_uuid', 'reservation_created']]
 re_comp_df.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
-
