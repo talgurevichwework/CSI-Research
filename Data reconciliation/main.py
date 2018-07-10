@@ -5,8 +5,8 @@ import pandas as pd
 import csv
 
 # Variables:
-start_date = '2018-06-03'
-end_date = '2018-06-10'# Not inclusive
+start_date = '2018-07-01'
+end_date = '2018-07-07'# Not inclusive
 time_period = 'Week'
 output_file_destination = f'./Reports/output{start_date}to{end_date}.csv'
 reuse_file_destination = f'./Reports/reuse{start_date}to{end_date}.csv'
@@ -53,9 +53,9 @@ with open(output_file_destination, 'a', newline='') as f:
 	writer.writerow([looker_sum, sf_sum])
 
 re_comp_df = re_df.merge(return_df, how='right', left_on='company_uuid', right_on='Account UUID')
-re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found']]
+re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found', 'membership_agreement_uuid']]
 re_comp_df.to_csv(reuse_file_destination, encoding='utf-8', index=False)
 
-re_comp_df = re_comp_df.merge(sm_df, how='left', left_on='Account UUID', right_on='account_uuid')
-re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found', 'ma_uuid', 'sf_opportunity_id', 'reservation_uuid', 'reservation_created']]
+re_comp_df = re_comp_df.merge(sm_df, how='left', left_on='membership_agreement_uuid', right_on='ma_uuid')
+re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found', 'ma_uuid', 'ma_created', 'sf_opportunity_id', 'reservation_uuid', 'reservation_created', 'reservation_started_on', 'reservation_ended_on', 'reservable']]
 re_comp_df.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
