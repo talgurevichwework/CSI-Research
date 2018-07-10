@@ -47,7 +47,14 @@ def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 		cr as (
 			select *
 			from spaceman_public.change_requests cr)
-		select *
+		select ma.account_uuid as account_uuid,
+			ma.uuid as ma_uuid,
+			cr.uuid as Change_uuid,
+			cr.created_at as cr_created,
+			r.uuid as reservation_uuid,
+			r.created_at as reservation_created,
+			cr.reservation_type,
+			cr.sf_opportunity_id  
 		from cr
 		join ma on ma.id = cr.membership_agreement_id
 		join r on r.id = cr.reservation_id
