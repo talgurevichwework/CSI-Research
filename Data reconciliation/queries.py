@@ -1,3 +1,10 @@
+# Gets all v_transaction records for input account_uuid
+def create_vtrans_account_history_query(account_uuid):
+	return(f'''
+		select * from dw.v_transaction where account_uuid='{account_uuid}'
+		''')
+
+# sf closed lost query with date in data_trunc (i.e Looker) format
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
 		select contacts.account_uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
@@ -7,26 +14,7 @@ def create_salesforce_closedlost_query(time_period, start_date, end_date):
 		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
-def create_sapi_reuserecords_query(time_period, start_date, end_date):
-	return(f'''
-		select *
-		from sales_api_public.opportunity_reuse_records as opr
-		where date_trunc(lower('{time_period}'), opr.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opr.created_at)::date<TIMESTAMP '{end_date}'
-	''')
-def create_spaceman_reservations_query(time_period, start_date, end_date):
-	return(f'''
-		select *
-		from spaceman_public.reservations r
-		where date_trunc(lower('{time_period}'), r.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), r.created_at)::date<TIMESTAMP '{end_date}'
-	''')
-
-def create_spaceman_membershipagreements_query(time_period, start_date, end_date):
-	return(f'''
-		select *
-		from spaceman_public.membership_agreements ma
-		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
-	''')
-
+# sf closed won query with date in data_trunc (i.e Looker) format
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
 		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
@@ -36,6 +24,31 @@ def create_salesforce_closedwon_query(time_period, start_date, end_date):
 		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
+# Gets reuse logic records over given time period in data_trunc format
+def create_sapi_reuserecords_query(time_period, start_date, end_date):
+	return(f'''
+		select *
+		from sales_api_public.opportunity_reuse_records as opr
+		where date_trunc(lower('{time_period}'), opr.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opr.created_at)::date<TIMESTAMP '{end_date}'
+	''')
+
+# Gets spaceman_public.reservations over time period in data_trunc format
+def create_spaceman_reservations_query(time_period, start_date, end_date):
+	return(f'''
+		select *
+		from spaceman_public.reservations r
+		where date_trunc(lower('{time_period}'), r.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), r.created_at)::date<TIMESTAMP '{end_date}'
+	''')
+
+# Gets spaceman_public.membership_agreements over time period in data_trunc format
+def create_spaceman_membershipagreements_query(time_period, start_date, end_date):
+	return(f'''
+		select *
+		from spaceman_public.membership_agreements ma
+		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
+	''')
+
+# Gets reservations, change_requests, membership_agreements over time period in data_trunc format
 def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 	return(f'''
 		with ma as (
@@ -65,6 +78,38 @@ def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 		and cr.reservation_type = 'PrimaryReservation'
 		''')
 
+# ===============================================================================================================================================================================================
+
+# sf closed lost query with date in normal format
+def create_salesforce_closedlost_query_notrunc(time_period, start_date, end_date):
+	return(f'''
+		select contacts.account_uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}')
+		from salesforce_v2.opportunity as opportunities
+		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
+		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0
+		group by contacts.account_uuid_c
+		''')
+
+# sf closed won query with date in normal format
+def create_salesforce_closedwon_query_notrunc(time_period, start_date, end_date):
+	return(f'''
+		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
+		from salesforce_v2.opportunity as opportunities
+		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
+		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}'
+		group by contacts.account_uuid_c
+		''')
+
+# Gets v_transaction records over given time period in normal date format
+def create_vtrans_query_notrunc(start_date, end_date):
+	return(f'''
+		select account_name, account_uuid, sum(desks_added) as desks_added, sum(desks_loss) as desks_loss, sum(desks_changed) as desks_changed
+		from dw.v_transaction
+		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}' and city<>'Beijing' and city<>'Shanghai'
+		group by account_name, account_uuid
+		''')
+
+# Creates looker query over given time period in data_trunc format
 def create_looker_query(time_period, start_date, end_date):
 	return(f'''
 		WITH new_sales_reporting AS (select
