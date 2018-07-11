@@ -57,5 +57,5 @@ re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk 
 re_comp_df.to_csv(reuse_file_destination, encoding='utf-8', index=False)
 
 re_comp_df = re_comp_df.merge(sm_df, how='left', left_on='membership_agreement_uuid', right_on='ma_uuid')
-re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found', 'ma_uuid', 'ma_created', 'sf_opportunity_id', 'reservation_uuid', 'reservation_created', 'reservation_started_on', 'reservation_ended_on', 'reservable']]
+re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk Change', 'Sf Looker Difference', 'Sf Looker Absolute Difference', 'contract_event_type', 'step_found', 'ma_uuid', 'membership_agreement_uuid', 'ma_created', 'sf_opportunity_id', 'reservation_uuid', 'reservation_created', 'reservation_started_on', 'reservation_ended_on', 'reservable']]
 re_comp_df.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
