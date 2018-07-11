@@ -7,21 +7,21 @@ def create_vtrans_account_history_query(account_uuid):
 # sf closed lost query with date in data_trunc (i.e Looker) format
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
+		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
-		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0
-		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
+		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0  and (segment_c <> 'Residential Space' or segment_c is null)
+		group by accounts.uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
 # sf closed won query with date in data_trunc (i.e Looker) format
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
+		select accounts.uuid_c as account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
-		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Won' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}'
-		group by contacts.account_uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
+		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Won' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}'  and (segment_c <> 'Residential Space' or segment_c is null) and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null)
+		group by accounts.uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
 # Gets reuse logic records over given time period in data_trunc format
@@ -83,21 +83,21 @@ def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 # sf closed lost query with date in normal format
 def create_salesforce_closedlost_query_notrunc(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}')
+		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
-		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
-		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0
-		group by contacts.account_uuid_c
+		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0 and (segment_c <> 'Residential Space' or segment_c is null)
+		group by accounts.uuid_c
 		''')
 
 # sf closed won query with date in normal format
 def create_salesforce_closedwon_query_notrunc(time_period, start_date, end_date):
 	return(f'''
-		select contacts.account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
-		from salesforce_v2.opportunity as opportunities
-		left join (select account_uuid_c, account_id from salesforce_v2.contact group by account_id, account_uuid_c) as contacts on opportunities.account_id=contacts.account_id
+		select accounts.uuid_c as account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
+		from salesforce._opportunity as opportunities
+		left join (select uuid_c, id from salesforce._account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
 		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}'
-		group by contacts.account_uuid_c
+		group by accounts.uuid_c
 		''')
 
 # Gets v_transaction records over given time period in normal date format
