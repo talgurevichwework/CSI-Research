@@ -7,7 +7,7 @@ def create_vtrans_account_history_query(account_uuid):
 # sf closed lost query with date in data_trunc (i.e Looker) format
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
-		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
+		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
 		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
 		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0  and (segment_c <> 'Residential Space' or segment_c is null)
