@@ -10,7 +10,7 @@ def create_salesforce_closedlost_query(time_period, start_date, end_date):
 		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
 		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0  and (segment_c <> 'Residential Space' or segment_c is null)
+		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0 and opportunities.region_name_c<>'India'
 		group by accounts.uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
@@ -20,7 +20,7 @@ def create_salesforce_closedwon_query(time_period, start_date, end_date):
 		select accounts.uuid_c as account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
 		from salesforce_v2.opportunity as opportunities
 		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Won' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}'  and (segment_c <> 'Residential Space' or segment_c is null) and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null)
+		where stage_name='Closed Won' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null) and opportunities.region_name_c<>'India'
 		group by accounts.uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
@@ -83,10 +83,10 @@ def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 # sf closed lost query with date in normal format
 def create_salesforce_closedlost_query_notrunc(time_period, start_date, end_date):
 	return(f'''
-		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
+		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost
 		from salesforce_v2.opportunity as opportunities
 		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0 and (segment_c <> 'Residential Space' or segment_c is null)
+		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0 and opportunities.region_name_c<>'India'
 		group by accounts.uuid_c
 		''')
 
@@ -94,9 +94,9 @@ def create_salesforce_closedlost_query_notrunc(time_period, start_date, end_date
 def create_salesforce_closedwon_query_notrunc(time_period, start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
-		from salesforce._opportunity as opportunities
-		left join (select uuid_c, id from salesforce._account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}'
+		from salesforce_v2.opportunity as opportunities
+		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null) and opportunities.region_name_c<>'India'
 		group by accounts.uuid_c
 		''')
 
@@ -196,7 +196,7 @@ def create_looker_query(time_period, start_date, end_date):
 		        when 'Global'= 'Territory'
 		          then t.region
 		        when 'Global'= 'Region'
-		          then t.region
+		          then t.region --xxxxxxxxxxxxxxxxxxxxxxxxxxx
 		        else null
 		      end as region,
 		        case
@@ -264,7 +264,7 @@ def create_looker_query(time_period, start_date, end_date):
 			new_sales_reporting.account_name  AS "new_sales_reporting.account_name",
 			accounts.account_uuid  AS "accounts.account_uuid",
 			new_sales_reporting.date as "close_date",
-			COALESCE(SUM(new_sales_reporting.upgrades + new_sales_reporting.new_sales + new_sales_reporting.downgrades + new_sales_reporting.churn_notice), 0) AS "new_sales_reporting.net_sales_1"
+			COALESCE(SUM(new_sales_reporting.upgrades + new_sales_reporting.new_sales), 0) AS "new_sales_reporting.net_sales_1"
 		FROM new_sales_reporting
 		LEFT JOIN dw.mv_dim_account  AS accounts ON new_sales_reporting.account_uuid=accounts.account_uuid
 		WHERE
