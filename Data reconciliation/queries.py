@@ -125,7 +125,7 @@ def create_salesforce_closedwon_query_notrunc(time_period, start_date, end_date)
 # Gets v_transaction records over given time period in normal date format
 def create_vtrans_query_notrunc(start_date, end_date):
 	return(f'''
-		select v.account_name, 
+with vtrans as (select v.account_name, 
 		v.account_uuid, 
 		sum(v.desks_changed) as desks_changed,
 			case 
@@ -134,11 +134,14 @@ def create_vtrans_query_notrunc(start_date, end_date):
 			else ma.uuid
 			end as contract_uuid
 		from dw.v_transaction v
-		left join spaceman_public.reservations r on r.uuid=v.reservation_uuid
-		left join spaceman_public.change_requests cr on cr.reservation_id=r.id
-		left join spaceman_public.membership_agreements ma on ma.id=cr.membership_agreement_id
+	left join (select r.uuid, r.id from spaceman_public.reservations r group by r.uuid, r.id) r on r.uuid=v.reservation_uuid
+	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
+	left join (select ma.id, ma.uuid from spaceman_public.membership_agreements ma group by ma.id, ma.uuid) ma on ma.id=cr.membership_agreement_id
 		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}' and city<>'Beijing' and city<>'Shanghai'
-		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid	
+		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid)
+			select account_name, account_uuid, sum(desks_changed) as desks_changed, contract_uuid
+				from vtrans
+				group by account_name, account_uuid, contract_uuid
 		''')
 
 # Creates looker query over given time period in data_trunc format
