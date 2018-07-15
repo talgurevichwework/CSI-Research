@@ -1,10 +1,71 @@
-# Gets all v_transaction records for input account_uuid
-def create_vtrans_account_history_query(account_uuid):
+# ========================================================================================Main2 Queries=======================================================================================================
+
+# Gets reuse logic records over given time period in data_trunc format
+def create_sapi_reuserecords_query_notrunc(start_date, end_date):
 	return(f'''
-		select * from dw.v_transaction where account_uuid='{account_uuid}'
+		select *
+		from sales_api_public.opportunity_reuse_records as opr
+		where opr.created_at >= TIMESTAMP '{start_date}' and opr.created_at < TIMESTAMP '{end_date}'
+	''')
+
+# sf closed lost query with date in normal format
+def create_salesforce_closedlost_query_notrunc(start_date, end_date):
+	return(f'''
+		select accounts.uuid_c as account_uuid_c, 
+		case 
+			when opportunities.type_c='Hot Desk' 
+				and (opportunities.region_name_c<>'China' or opportunities.portfolio_name_c='Hong Kong') -- Get rest of cases form Tal
+			then opportunities.reservation_uuid_c
+			else opportunities.contract_uuid_c
+		end as contract_uuid_c, 
+		sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost
+		from salesforce_v2.opportunity as opportunities
+		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0 and opportunities.region_name_c<>'India'
+		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c
 		''')
 
-# sf closed lost query with date in data_trunc (i.e Looker) format
+# sf closed won query with date in normal format
+def create_salesforce_closedwon_query_notrunc(start_date, end_date):
+	return(f'''
+		select accounts.uuid_c as account_uuid_c, 
+		case 
+			when opportunities.type_c='Hot Desk' 
+				and (opportunities.region_name_c<>'China' or opportunities.portfolio_name_c='Hong Kong') -- Get rest of cases form Tal
+			then opportunities.reservation_uuid_c
+			else opportunities.contract_uuid_c
+		end as contract_uuid_c, 
+		sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
+		from salesforce_v2.opportunity as opportunities
+		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null) and opportunities.region_name_c<>'India'
+		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c
+		''')
+
+# Gets v_transaction records over given time period in normal date format as well as contract uuid from corresponding membership agreement
+def create_vtrans_query_notrunc(start_date, end_date):
+	return(f'''
+with vtrans as (select v.account_name, 
+		v.account_uuid, 
+		sum(v.desks_changed) as desks_changed,
+			case 
+				when (v.reservable_type='HotDesk' and v.city<>'Beijing' and v.city<>'Shanghai') -- Get rest of cases from Tal
+			then v.reservation_uuid
+			else ma.uuid
+			end as contract_uuid
+		from dw.v_transaction v
+	left join (select r.uuid, r.id from spaceman_public.reservations r group by r.uuid, r.id) r on r.uuid=v.reservation_uuid
+	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
+	left join (select ma.id, ma.uuid from spaceman_public.membership_agreements ma group by ma.id, ma.uuid) ma on ma.id=cr.membership_agreement_id
+		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}' and city<>'Beijing' and city<>'Shanghai'
+		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid)
+			select account_name, account_uuid, sum(desks_changed) as desks_changed, contract_uuid
+				from vtrans
+				group by account_name, account_uuid, contract_uuid
+		''')
+# ========================================================================================Main Queries=======================================================================================================
+
+# sf closed lost query with date in data_trunc (i.e Looker) format (combine with sf closed won query to create sfdc report)
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
@@ -14,7 +75,7 @@ def create_salesforce_closedlost_query(time_period, start_date, end_date):
 		group by accounts.uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
-# sf closed won query with date in data_trunc (i.e Looker) format
+# sf closed won query with date in data_trunc (i.e Looker) format (combine with sf closed lost query to create sfdc report)
 def create_salesforce_closedwon_query(time_period, start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon, date_trunc (lower('{time_period}'), opportunities.close_date)::date as date
@@ -76,72 +137,6 @@ def create_spaceman_r_cr_ma_query(time_period, start_date, end_date):
 		full join r on r.id = cr.reservation_id
 		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
 		and cr.reservation_type = 'PrimaryReservation'
-		''')
-
-# ===============================================================================================================================================================================================
-
-# Gets reuse logic records over given time period in data_trunc format
-def create_sapi_reuserecords_query_notrunc(time_period, start_date, end_date):
-	return(f'''
-		select *
-		from sales_api_public.opportunity_reuse_records as opr
-		where opr.created_at >= TIMESTAMP '{start_date}' and date_trunc opr.created_at < TIMESTAMP '{end_date}'
-	''')
-
-# sf closed lost query with date in normal format
-def create_salesforce_closedlost_query_notrunc(time_period, start_date, end_date):
-	return(f'''
-		select accounts.uuid_c as account_uuid_c, 
-		case 
-			when opportunities.type_c='Hot Desk' 
-				and (opportunities.region_name_c<>'China' or opportunities.portfolio_name_c='Hong Kong') -- Get rest of cases form Tal
-			then opportunities.reservation_uuid_c
-			else opportunities.contract_uuid_c
-		end as contract_uuid_c, 
-		sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost
-		from salesforce_v2.opportunity as opportunities
-		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0 and opportunities.region_name_c<>'India'
-		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c
-		''')
-
-# sf closed won query with date in normal format
-def create_salesforce_closedwon_query_notrunc(time_period, start_date, end_date):
-	return(f'''
-		select accounts.uuid_c as account_uuid_c, 
-		case 
-			when opportunities.type_c='Hot Desk' 
-				and (opportunities.region_name_c<>'China' or opportunities.portfolio_name_c='Hong Kong') -- Get rest of cases form Tal
-			then opportunities.reservation_uuid_c
-			else opportunities.contract_uuid_c
-		end as contract_uuid_c, 
-		sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
-		from salesforce_v2.opportunity as opportunities
-		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null) and opportunities.region_name_c<>'India'
-		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c
-		''')
-
-# Gets v_transaction records over given time period in normal date format
-def create_vtrans_query_notrunc(start_date, end_date):
-	return(f'''
-with vtrans as (select v.account_name, 
-		v.account_uuid, 
-		sum(v.desks_changed) as desks_changed,
-			case 
-				when (v.reservable_type='HotDesk' and v.city<>'Beijing' and v.city<>'Shanghai') -- Get rest of cases from Tal
-			then v.reservation_uuid
-			else ma.uuid
-			end as contract_uuid
-		from dw.v_transaction v
-	left join (select r.uuid, r.id from spaceman_public.reservations r group by r.uuid, r.id) r on r.uuid=v.reservation_uuid
-	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
-	left join (select ma.id, ma.uuid from spaceman_public.membership_agreements ma group by ma.id, ma.uuid) ma on ma.id=cr.membership_agreement_id
-		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}' and city<>'Beijing' and city<>'Shanghai'
-		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid)
-			select account_name, account_uuid, sum(desks_changed) as desks_changed, contract_uuid
-				from vtrans
-				group by account_name, account_uuid, contract_uuid
 		''')
 
 # Creates looker query over given time period in data_trunc format
