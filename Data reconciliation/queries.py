@@ -13,8 +13,8 @@ def create_salesforce_closedlost_query_notrunc(start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, 
 		case 
-			when opportunities.type_c='Hot Desk' 
-				and (opportunities.region_name_c<>'China' or opportunities.portfolio_name_c='Hong Kong') -- Get rest of cases form Tal
+			when (opportunities.type_c='Hot Desk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
+				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR')
 			then opportunities.reservation_uuid_c
 			else opportunities.contract_uuid_c
 		end as contract_uuid_c, 
@@ -30,8 +30,8 @@ def create_salesforce_closedwon_query_notrunc(start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, 
 		case 
-			when opportunities.type_c='Hot Desk' 
-				and (opportunities.region_name_c<>'China' or opportunities.portfolio_name_c='Hong Kong') -- Get rest of cases form Tal
+			when (opportunities.type_c='Hot Desk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
+				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR')
 			then opportunities.reservation_uuid_c
 			else opportunities.contract_uuid_c
 		end as contract_uuid_c, 
@@ -49,7 +49,8 @@ with vtrans as (select v.account_name,
 		v.account_uuid, 
 		sum(v.desks_changed) as desks_changed,
 			case 
-				when (v.reservable_type='HotDesk' and v.city<>'Beijing' and v.city<>'Shanghai') -- Get rest of cases from Tal
+				when (v.reservable_type='HotDesk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
+				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR')
 			then v.reservation_uuid
 			else ma.uuid
 			end as contract_uuid
@@ -57,7 +58,7 @@ with vtrans as (select v.account_name,
 	left join (select r.uuid, r.id from spaceman_public.reservations r group by r.uuid, r.id) r on r.uuid=v.reservation_uuid
 	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
 	left join (select ma.id, ma.uuid from spaceman_public.membership_agreements ma group by ma.id, ma.uuid) ma on ma.id=cr.membership_agreement_id
-		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}' and city<>'Beijing' and city<>'Shanghai'
+		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}'
 		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid)
 			select account_name, account_uuid, sum(desks_changed) as desks_changed, contract_uuid
 				from vtrans
