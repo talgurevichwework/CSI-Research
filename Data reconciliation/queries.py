@@ -12,6 +12,7 @@ def create_sapi_reuserecords_query_notrunc(start_date, end_date):
 def create_salesforce_closedlost_query_notrunc(start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, 
+		accounts.name,
 		l.country_code,
 		case 
 			when (opportunities.type_c='Hot Desk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
@@ -22,15 +23,16 @@ def create_salesforce_closedlost_query_notrunc(start_date, end_date):
 		sum(opportunities.total_desks_reserved_net_c) as net_desks_closedlost
 		from salesforce_v2.opportunity as opportunities
 		left join spaceman_public.locations l on l.uuid=opportunities.building_uuid_c	
-		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0 and opportunities.region_name_c<>'India'
-		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code
+		left join (select uuid_c, id, name from salesforce_v2.account group by name, uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0
+		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code, accounts.name
 		''')
 
 # sf closed won query with date in normal format
 def create_salesforce_closedwon_query_notrunc(start_date, end_date):
 	return(f'''
 		select accounts.uuid_c as account_uuid_c, 
+		accounts.name,
 		l.country_code,
 		case 
 			when (opportunities.type_c='Hot Desk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
@@ -41,9 +43,9 @@ def create_salesforce_closedwon_query_notrunc(start_date, end_date):
 		sum(opportunities.no_of_desks_unweighted_c) as net_desks_closedwon
 		from salesforce_v2.opportunity as opportunities
 		left join spaceman_public.locations l on l.uuid=opportunities.building_uuid_c
-		left join (select uuid_c, id from salesforce_v2.account group by uuid_c, id) as accounts on opportunities.account_id=accounts.id
-		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null) and opportunities.region_name_c<>'India'
-		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code
+		left join (select uuid_c, id, name from salesforce_v2.account group by name, uuid_c, id) as accounts on opportunities.account_id=accounts.id
+		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null)
+		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code, accounts.name
 		''')
 
 # Gets v_transaction records over given time period in normal date format as well as contract uuid from corresponding membership agreement
@@ -69,6 +71,21 @@ with vtrans as (select v.account_name,
 			select account_name, account_uuid, country_code, sum(desks_changed) as desks_changed, contract_uuid
 				from vtrans
 				group by account_name, account_uuid, contract_uuid, country_code
+		''')
+
+# Returns date frame with opportunities connected to given reservation uuid
+def create_hd_opp_query(reservation_uuid, move_type):
+	stage = 'Closed Lost' if move_type == 'moveout' else 'Closed Won'
+	return(f'''
+			select o.reservation_uuid_c, o.name, o.region_name_c, o.territory_name_c, o.building_city_c, o.no_of_desks_unweighted_c, o.total_desks_reserved_net_c, o.close_date, o.stage_name
+			from salesforce_v2.opportunity o
+			where o.reservation_uuid_c='{reservation_uuid}' and o.stage_name='{stage}'
+		''')
+
+# Returns date frame with reservations connected to given reservation uuid
+def create_hd_res_query(reservation_uuid):
+	return(f'''
+			select * from dw.v_transaction v where v.reservation_uuid='{reservation_uuid}'
 		''')
 # ========================================================================================Main Queries=======================================================================================================
 
