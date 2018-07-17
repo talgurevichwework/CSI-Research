@@ -8,6 +8,8 @@ import label_sync_issue as lsi
 # Variables:
 start_date = '2018-06-12'
 end_date = '2018-06-13'# Not inclusive
+start_date_nextmonth = '2018-07-12'
+end_date_nextmonth = '2018-07-13'
 output_file_destination = f'./Reports/output{start_date}to{end_date}2.csv'
 reuse_file_destination = f'./Reports/reuse{start_date}to{end_date}2.csv'
 fulloutput_file_destination = f'./Reports/fulloutput{start_date}to{end_date}2.csv'
@@ -16,6 +18,10 @@ fulloutput_file_destination = f'./Reports/fulloutput{start_date}to{end_date}2.cs
 vtrans_df = we.get_tbl_query(queries.create_vtrans_query_notrunc(start_date, end_date))
 cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query_notrunc(start_date, end_date))
 cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query_notrunc(start_date, end_date))
+cl_nextmonth_df = we.get_tbl_query(f'''select o.reservation_uuid_c, o.total_desks_reserved_net_c, o.close_date 
+	from salesforce_v2.opportunity o 
+	where o.close_date >= TIMESTAMP '{start_date_nextmonth}' and o.close_date < TIMESTAMP '{end_date_nextmonth}' 
+	''')
 re_df = we.get_tbl_query(queries.create_sapi_reuserecords_query_notrunc(start_date, end_date))
 
 # Merge closed won and closed lost tables
@@ -54,7 +60,7 @@ return_df = comp_df[comp_df['Sf Vtrans Absolute Difference'] != 0]
 return_df['Sync Issue'] = ""
 
 # ==============================================================================================Sync Error Logic===========================================================================================================
-return_df['Sync Issue'] = return_df.apply (lambda row: lsi.label_sync_issue (row, vtrans_df),axis=1)
+return_df['Sync Issue'] = return_df.apply (lambda row: lsi.label_sync_issue (row, vtrans_df, cl_nextmonth_df),axis=1)
 
 # =========================================================================================================================================================================================================
 return_df.to_csv(output_file_destination, encoding='utf-8', index=False)

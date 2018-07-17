@@ -64,7 +64,8 @@ with vtrans as (select v.account_name,
 		from dw.v_transaction v
 	left join spaceman_public.locations l on l.uuid=v.location_uuid
 	left join (select r.uuid, r.id from spaceman_public.reservations r group by r.uuid, r.id) r on r.uuid=v.reservation_uuid
-	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
+	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr where cr.executed_at >= TIMESTAMP '2018-06-12' and cr.executed_at <TIMESTAMP '2018-06-13' 
+		group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
 	left join (select ma.id, ma.uuid from spaceman_public.membership_agreements ma group by ma.id, ma.uuid) ma on ma.id=cr.membership_agreement_id
 		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}'
 		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid, l.country_code)
