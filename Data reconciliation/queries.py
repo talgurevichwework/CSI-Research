@@ -14,9 +14,12 @@ def create_salesforce_closedlost_query_notrunc(start_date, end_date):
 		select accounts.uuid_c as account_uuid_c, 
 		accounts.name,
 		l.country_code,
+		opportunities.name as opp_name,
 		case 
-			when (opportunities.type_c='Hot Desk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
-				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR')
+			when (((opportunities.type_c='Hot Desk' and opportunities.type_c is not null) or (opportunities.segment_c='Enterprise Solutions' 
+				and opportunities.other_lost_reason_c='Hot Desk Contract Canceled New Opportunity' and opportunities.other_lost_reason_c is not null))
+			and ((l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
+				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR') or l.country_code is null))
 			then opportunities.reservation_uuid_c
 			else opportunities.contract_uuid_c
 		end as contract_uuid_c, 
@@ -25,7 +28,8 @@ def create_salesforce_closedlost_query_notrunc(start_date, end_date):
 		left join spaceman_public.locations l on l.uuid=opportunities.building_uuid_c	
 		left join (select uuid_c, id, name from salesforce_v2.account group by name, uuid_c, id) as accounts on opportunities.account_id=accounts.id
 		where stage_name='Closed Lost' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c < 0
-		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code, accounts.name
+		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code, accounts.name,
+		opportunities.other_lost_reason_c, opportunities.segment_c, opportunities.name
 		''')
 
 # sf closed won query with date in normal format
@@ -34,9 +38,10 @@ def create_salesforce_closedwon_query_notrunc(start_date, end_date):
 		select accounts.uuid_c as account_uuid_c, 
 		accounts.name,
 		l.country_code,
+		opportunities.name as opp_name,
 		case 
-			when (opportunities.type_c='Hot Desk' and l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
-				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR')
+			when (opportunities.type_c='Hot Desk' and opportunities.type_c is not null and ((l.country_code<>'CHN' and l.country_code<>'ARG' and l.country_code<>'COL' 
+				and l.country_code<>'PER' and l.country_code<>'IND' and l.country_code<>'RUS' and l.country_code<>'CHL' and l.country_code<>'KOR') or l.country_code is null))
 			then opportunities.reservation_uuid_c
 			else opportunities.contract_uuid_c
 		end as contract_uuid_c, 
@@ -45,7 +50,8 @@ def create_salesforce_closedwon_query_notrunc(start_date, end_date):
 		left join spaceman_public.locations l on l.uuid=opportunities.building_uuid_c
 		left join (select uuid_c, id, name from salesforce_v2.account group by name, uuid_c, id) as accounts on opportunities.account_id=accounts.id
 		where stage_name='Closed Won' and opportunities.close_date >= TIMESTAMP '{start_date}' and opportunities.close_date < TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null)
-		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, l.country_code, accounts.name
+		group by accounts.uuid_c, opportunities.contract_uuid_c, opportunities.type_c, reservation_uuid_c, opportunities.portfolio_name_c, opportunities.region_name_c, 
+		l.country_code, accounts.name, opportunities.name
 		''')
 
 # Gets v_transaction records over given time period in normal date format as well as contract uuid from corresponding membership agreement
@@ -64,8 +70,11 @@ with vtrans as (select v.account_name,
 		from dw.v_transaction v
 	left join spaceman_public.locations l on l.uuid=v.location_uuid
 	left join (select r.uuid, r.id from spaceman_public.reservations r group by r.uuid, r.id) r on r.uuid=v.reservation_uuid
-	left join (select cr.reservation_id, cr.membership_agreement_id from spaceman_public.change_requests cr where cr.executed_at >= TIMESTAMP '2018-06-12' and cr.executed_at <TIMESTAMP '2018-06-13' 
-		group by cr.reservation_id, cr.membership_agreement_id) cr on cr.reservation_id=r.id
+	left join (select cr.reservation_id, cr.membership_agreement_id, cr.reservation_started_on, cr.reservation_ended_on from spaceman_public.change_requests cr
+		where cr.executed_at >= DATEADD(day , -1 , '2018-06-01') and cr.executed_at < DATEADD(day, 1, '2018-07-01') 
+		group by cr.reservation_id, cr.membership_agreement_id, cr.reservation_started_on, cr.reservation_ended_on) cr on cr.reservation_id=r.id 
+			and (((v.action_type='Transfer In' or v.action_type='Move In') and cr.reservation_started_on is not null) or 
+			(v.action_type='Transfer Out' or v.action_type='Move Out') and cr.reservation_ended_on is not null)
 	left join (select ma.id, ma.uuid from spaceman_public.membership_agreements ma group by ma.id, ma.uuid) ma on ma.id=cr.membership_agreement_id
 		where date_reserved_local >=TIMESTAMP '{start_date}' and date_reserved_local <TIMESTAMP '{end_date}'
 		group by v.account_name, v.account_uuid, v.reservable_type, v.city, v.reservation_uuid, ma.uuid, l.country_code)
