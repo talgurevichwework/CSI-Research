@@ -12,9 +12,9 @@ start_date = '2018-06-12'
 end_date = '2018-06-13'# Not inclusive
 start_date_nextmonth = str((dt.strptime(start_date, "%Y-%m-%d") + rd(months=+1)).date())
 end_date_nextmonth = str((dt.strptime(end_date, "%Y-%m-%d") + rd(months=+1)).date())
-output_file_destination = f'./Reports/output{start_date}to{end_date}2.csv'
-reuse_file_destination = f'./Reports/reuse{start_date}to{end_date}2.csv'
-fulloutput_file_destination = f'./Reports/fulloutput{start_date}to{end_date}2.csv'
+output_file_destination = f'./Reports/transaction_output{start_date}to{end_date}.csv'
+reuse_file_destination = f'./Reports/transaction_reuse{start_date}to{end_date}.csv'
+fulloutput_file_destination = f'./Reports/transaction_fulloutput{start_date}to{end_date}.csv'
 
 # Get query results as pandas dfs
 vtrans_df = we.get_tbl_query(queries.create_vtrans_query_notrunc(start_date, end_date))

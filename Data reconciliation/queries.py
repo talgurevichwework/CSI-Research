@@ -1,4 +1,4 @@
-# ========================================================================================Main2 Queries=======================================================================================================
+# ========================================================================================transaction-sf Queries=======================================================================================================
 
 # Gets reuse logic records over given time period in data_trunc format
 def create_sapi_reuserecords_query_notrunc(start_date, end_date):
@@ -83,6 +83,8 @@ with vtrans as (select v.account_name,
 				group by account_name, account_uuid, contract_uuid, country_code
 		''')
 
+# ========================================================================================label_sync_issues Queries=======================================================================================================
+
 # Returns date frame with opportunities connected to given reservation uuid
 def create_hd_opp_query(reservation_uuid, move_type):
 	stage = 'Closed Lost' if move_type == 'moveout' else 'Closed Won'
@@ -97,7 +99,8 @@ def create_hd_res_query(reservation_uuid):
 	return(f'''
 			select * from dw.v_transaction v where v.reservation_uuid='{reservation_uuid}'
 		''')
-# ========================================================================================Main Queries=======================================================================================================
+
+# ========================================================================================looker-sf Queries=======================================================================================================
 
 # sf closed lost query with date in data_trunc (i.e Looker) format (combine with sf closed won query to create sfdc report)
 def create_salesforce_closedlost_query(time_period, start_date, end_date):
@@ -125,22 +128,6 @@ def create_sapi_reuserecords_query(time_period, start_date, end_date):
 		select *
 		from sales_api_public.opportunity_reuse_records as opr
 		where date_trunc(lower('{time_period}'), opr.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opr.created_at)::date<TIMESTAMP '{end_date}'
-	''')
-
-# Gets spaceman_public.reservations over time period in data_trunc format
-def create_spaceman_reservations_query(time_period, start_date, end_date):
-	return(f'''
-		select *
-		from spaceman_public.reservations r
-		where date_trunc(lower('{time_period}'), r.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), r.created_at)::date<TIMESTAMP '{end_date}'
-	''')
-
-# Gets spaceman_public.membership_agreements over time period in data_trunc format
-def create_spaceman_membershipagreements_query(time_period, start_date, end_date):
-	return(f'''
-		select *
-		from spaceman_public.membership_agreements ma
-		where date_trunc(lower('{time_period}'), ma.created_at)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), ma.created_at)::date<TIMESTAMP '{end_date}'
 	''')
 
 # Gets reservations, change_requests, membership_agreements over time period in data_trunc format

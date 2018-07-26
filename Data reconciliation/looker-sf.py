@@ -8,17 +8,15 @@ import csv
 start_date = '2018-06-12'
 end_date = '2018-06-13'# Not inclusive
 time_period = 'Day'
-output_file_destination = f'./Reports/output{start_date}to{end_date}.csv'
-reuse_file_destination = f'./Reports/reuse{start_date}to{end_date}.csv'
-fulloutput_file_destination = f'./Reports/fulloutput{start_date}to{end_date}.csv'
+output_file_destination = f'./Reports/looker_output{start_date}to{end_date}.csv'
+reuse_file_destination = f'./Reports/looker_reuse{start_date}to{end_date}.csv'
+fulloutput_file_destination = f'./Reports/looker_fulloutput{start_date}to{end_date}.csv'
 
 # Get query results as pandas dfs
 looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date, end_date))
 cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query(time_period, start_date, end_date))
 cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query(time_period, start_date, end_date))
 re_df = we.get_tbl_query(queries.create_sapi_reuserecords_query(time_period, start_date, end_date))
-#res_df = we.get_tbl_query(queries.create_spaceman_reservations_query(time_period, start_date, end_date))
-#ma_df = we.get_tbl_query(queries.create_spaceman_membershipagreements_query(time_period, start_date, end_date))
 sm_df = we.get_tbl_query(queries.create_spaceman_r_cr_ma_query(time_period, start_date, end_date))
 
 # Merge closed won and closed lost tables
