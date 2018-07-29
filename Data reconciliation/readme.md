@@ -4,8 +4,11 @@ This is an internal tool to quantify and segment the data reconciliation errors 
 ### Scripts
 There are two scripts: 
 - **looker-sf&#46;py** quantifies the data reconciliation errors between the salesforce and Looker sales reports:
+
 _output_ : the output of the comparison of both looker and SF reporting with all accounts and the number gaps
+
 _reuse_ : the reuse records reason and event joined into the output file.
+
 _fulloutput_ : a full right join of the output and the re-use entries
 
 
