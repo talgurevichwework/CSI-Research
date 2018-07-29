@@ -63,7 +63,7 @@ comp_df = comp_df.rename(index=str, columns={"account_name": "Account Name","acc
 return_df = comp_df[comp_df['Net Gap'] != 0]
 return_df['Reason'] = ""
 
-return_df['Reason'] = return_df.apply (lambda row: lsi.label_sync_issue(row, vtrans_df, cl_nextmonth_df, re_df), axis=1)
+return_df['Reason'] = return_df.apply (lambda row: lsi.label_sync_issue(row, cl_nextmonth_df, re_df), axis=1)
 
 full_output = return_df.merge(re_df, how='left', left_on='Contract UUID', right_on='membership_agreement_uuid')
 
@@ -74,6 +74,7 @@ print('Transaction Total: %d' % comp_df['Vtrans Count'].sum())
 print('Salesforce Total: %d' % comp_df['Salesforce Count'].sum())
 print('Net Gap: %d' % comp_df['Net Gap'].sum())
 print('Absolute Gap: %d' % comp_df['Absolute Gap'].sum())
+print('Accounts Affected: %d' % comp_df['Account UUID'].nunique())
 
 
 
