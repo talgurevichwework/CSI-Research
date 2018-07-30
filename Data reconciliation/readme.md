@@ -19,4 +19,13 @@ Generates all relevant SQL queries. All queries use the [WeModule] library for a
 ##### label_sync_issues&#46;py
 Contains the label_sync_issues function which attempts to diagnose the sync error of a single reservation. 
 
+## Instillation
+To install:
+1. Ensure access to relevant redshift schemas - salesforce_v2, spaceman_*, sales_api_public
+2. Setup [WeModule] (instruction on github page)
+3. Setup redshift vpn access
+4. clone repo
+
+To run, navigate to the data reconciliation folder and run the chosen script. All csvs will be saved to the Reports file in the repo. To adjust settings such as dates and file locations, you must change the hardcoded variables at the top of each script.
+
 [WeModule]: <https://github.com/WeConnect/we_module>
