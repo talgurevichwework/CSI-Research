@@ -11,6 +11,7 @@ time_period = 'Day'
 output_file_destination = f'./Reports/looker_output{start_date}to{end_date}.csv'
 reuse_file_destination = f'./Reports/looker_reuse{start_date}to{end_date}.csv'
 fulloutput_file_destination = f'./Reports/looker_fulloutput{start_date}to{end_date}.csv'
+printoutput_file_destination = f'./Reports/looker_printoutput{start_date}to{end_date}.txt'
 
 # Get query results as pandas dfs
 looker_df = we.get_tbl_query(queries.create_looker_query(time_period, start_date, end_date))
@@ -59,3 +60,11 @@ re_comp_df = re_comp_df[['Account UUID', 'Sf Net Desk Change', 'Looker Net Desk 
 re_comp_df.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
 
 comp_df.to_csv(output_file_destination, encoding='utf-8', index=False)
+
+with open(printoutput_file_destination, "w") as text_file:
+	text_file.write('Date Frame: %s - %s\n' % (start_date, end_date))
+	text_file.write('Transaction Total: %d\n' % comp_df['Looker Net Desk Change'].sum())
+	text_file.write('Salesforce Total: %d\n' % comp_df['Sf Net Desk Change'].sum())
+	text_file.write('Net Gap: %d\n' % comp_df['Sf Looker Difference'].sum())
+	text_file.write('Absolute Gap: %d\n' % comp_df['Sf Looker Absolute Difference'].sum())
+	text_file.write('Accounts Affected: %d\n' % comp_df['Account UUID'].nunique())

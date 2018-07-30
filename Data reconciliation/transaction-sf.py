@@ -15,6 +15,7 @@ end_date_nextmonth = str((dt.strptime(end_date, "%Y-%m-%d") + rd(months=+1)).dat
 output_file_destination = f'./Reports/transaction_output{start_date}to{end_date}.csv'
 reuse_file_destination = f'./Reports/transaction_reuse{start_date}to{end_date}.csv'
 fulloutput_file_destination = f'./Reports/transaction_fulloutput{start_date}to{end_date}.csv'
+printoutput_file_destination = f'./Reports/transaction_printoutput{start_date}to{end_date}.txt'
 
 # Get query results as pandas dfs
 vtrans_df = we.get_tbl_query(queries.create_vtrans_query_notrunc(start_date, end_date))
@@ -69,10 +70,12 @@ full_output = return_df.merge(re_df, how='left', left_on=['Contract UUID', 'Acco
 
 return_df.to_csv(output_file_destination, encoding='utf-8', index=False)
 full_output.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
-print('Date Frame: %s - %s' % (start_date, end_date))
-print('Transaction Total: %d' % comp_df['Vtrans Count'].sum())
-print('Salesforce Total: %d' % comp_df['Salesforce Count'].sum())
-print('Net Gap: %d' % comp_df['Net Gap'].sum())
-print('Absolute Gap: %d' % comp_df['Absolute Gap'].sum())
-print('Accounts Affected: %d' % comp_df['Account UUID'].nunique())
+
+with open(printoutput_file_destination, "w") as text_file:
+	text_file.write('Date Frame: %s - %s' % (start_date, end_date))
+	text_file.write('Transaction Total: %d' % comp_df['Vtrans Count'].sum())
+	text_file.write('Salesforce Total: %d' % comp_df['Salesforce Count'].sum())
+	text_file.write('Net Gap: %d' % comp_df['Net Gap'].sum())
+	text_file.write('Absolute Gap: %d' % comp_df['Absolute Gap'].sum())
+	text_file.write('Accounts Affected: %d' % comp_df['Account UUID'].nunique())
 
