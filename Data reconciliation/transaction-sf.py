@@ -65,7 +65,7 @@ return_df['Reason'] = ""
 
 return_df['Reason'] = return_df.apply (lambda row: lsi.label_sync_issue(row, cl_nextmonth_df, re_df), axis=1)
 
-full_output = return_df.merge(re_df, how='left', left_on='Contract UUID', right_on='membership_agreement_uuid')
+full_output = return_df.merge(re_df, how='left', left_on=['Contract UUID', 'Account UUID'], right_on=['membership_agreement_uuid', 'company_uuid'])
 
 return_df.to_csv(output_file_destination, encoding='utf-8', index=False)
 full_output.to_csv(fulloutput_file_destination, encoding='utf-8', index=False)
@@ -75,6 +75,4 @@ print('Salesforce Total: %d' % comp_df['Salesforce Count'].sum())
 print('Net Gap: %d' % comp_df['Net Gap'].sum())
 print('Absolute Gap: %d' % comp_df['Absolute Gap'].sum())
 print('Accounts Affected: %d' % comp_df['Account UUID'].nunique())
-
-
 
