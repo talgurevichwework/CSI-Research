@@ -8,8 +8,8 @@ from dateutil.relativedelta import relativedelta as rd
 from datetime import datetime as dt
 
 # Variables:
-start_date = '2018-06-12'
-end_date = '2018-06-13'# Not inclusive
+start_date = '2018-07-01'
+end_date = '2018-08-01'# Not inclusive
 start_date_nextmonth = str((dt.strptime(start_date, "%Y-%m-%d") + rd(months=+1)).date())
 end_date_nextmonth = str((dt.strptime(end_date, "%Y-%m-%d") + rd(months=+1)).date())
 output_file_destination = f'./Reports/transaction_output{start_date}to{end_date}.csv'
@@ -21,7 +21,7 @@ printoutput_file_destination = f'./Reports/transaction_printoutput{start_date}to
 vtrans_df = we.get_tbl_query(queries.create_vtrans_query_notrunc(start_date, end_date))
 cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query_notrunc(start_date, end_date))
 cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query_notrunc(start_date, end_date))
-cl_nextmonth_df = we.get_tbl_query(f'''select o.reservation_uuid_c, o.contract_uuid_c, o.total_desks_reserved_net_c, o.close_date 
+cl_nextmonth_df = we.get_tbl_query(f'''select o.reservation_uuid_c, o.contract_uuid_c, o.total_desks_reserved_net_c, o.close_date
 	from salesforce_v2.opportunity o
 	where o.close_date >= TIMESTAMP '{start_date_nextmonth}' and o.close_date < TIMESTAMP '{end_date_nextmonth}' and o.total_desks_reserved_net_c < 0
 	''')
@@ -78,4 +78,3 @@ with open(printoutput_file_destination, "w") as text_file:
 	text_file.write('Net Gap: %d' % comp_df['Net Gap'].sum())
 	text_file.write('Absolute Gap: %d' % comp_df['Absolute Gap'].sum())
 	text_file.write('Accounts Affected: %d' % comp_df['Account UUID'].nunique())
-

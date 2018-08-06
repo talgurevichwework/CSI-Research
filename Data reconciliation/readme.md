@@ -1,8 +1,8 @@
 # README
-This is an internal tool to quantify and segment the data reconciliation errors between Salesforce and Spaceman by type. 
+This is an internal tool to quantify and segment the data reconciliation errors between Salesforce and Spaceman by type.
 
 ### Scripts
-There are two scripts: 
+There are two scripts:
 - **looker-sf&#46;py** quantifies the data reconciliation errors between the salesforce and Looker sales reports:
   1. _output_ : the output of the comparison of both looker and SF reporting with all accounts and the number gaps
   2. _reuse_ : the reuse records reason and event joined into the output file.
@@ -17,9 +17,9 @@ There are two scripts:
 ##### queries&#46;py
 Generates all relevant SQL queries. All queries use the [WeModule] library for accessing the redshift db.
 ##### label_sync_issues&#46;py
-Contains the label_sync_issues function which attempts to diagnose the sync error of a single reservation. 
+Contains the label_sync_issues function which attempts to diagnose the sync error of a single reservation.
 
-## Instillation
+## Installation:
 To install:
 1. Ensure access to relevant redshift schemas - salesforce_v2, spaceman_*, sales_api_public
 2. Setup [WeModule] (instruction on github page)
