@@ -5,8 +5,8 @@ import pandas as pd
 import csv
 
 # Variables:
-start_date = '2018-07-01'
-end_date = '2018-08-01'# Not inclusive
+start_date = '2018-07-30'
+end_date = '2018-08-20'# Not inclusive
 time_period = 'Day'
 output_file_destination = f'./Reports/looker_output{start_date}to{end_date}.csv'
 reuse_file_destination = f'./Reports/looker_reuse{start_date}to{end_date}.csv'
