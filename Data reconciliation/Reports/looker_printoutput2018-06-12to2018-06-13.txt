@@ -1,6 +1,0 @@
-Date Frame: 2018-06-12 - 2018-06-13
-Transaction Total: 830
-Salesforce Total: 893
-Net Gap: 63
-Absolute Gap: 369
-Accounts Affected: 450

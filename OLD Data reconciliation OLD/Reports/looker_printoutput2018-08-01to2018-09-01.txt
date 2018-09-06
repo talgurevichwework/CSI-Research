@@ -1,0 +1,6 @@
+Date Frame: 2018-08-01 - 2018-09-01
+Transaction Total: 34220
+Salesforce Total: 1141057
+Net Gap: 1106837
+Absolute Gap: 1185971
+Accounts Affected: 9360

@@ -41,12 +41,8 @@ sf_df = sf_df[['uuid_c', 'Sf Net Desk Change']]
 comp_df = sf_df.merge(looker_df, how='outer', left_on='uuid_c', right_on='accounts_account_uuid') #simple innitial outer merge on uuid
 comp_df['Sf Net Desk Change']= comp_df['Sf Net Desk Change'].fillna(0)
 comp_df['new_sales_reporting_net_sales_1']= comp_df['new_sales_reporting_net_sales_1'].fillna(0)
-
-looker_df.to_csv(test , encoding='utf-8', index=False) #looker_df test
-
 comp_df['Sf Looker Difference'] = comp_df['Sf Net Desk Change'] - comp_df['new_sales_reporting_net_sales_1']
 comp_df['Sf Looker Absolute Difference'] = abs(comp_df['Sf Looker Difference'])
-
 comp_df['accounts_account_uuid'] = comp_df['accounts_account_uuid'].fillna(comp_df['uuid_c'])
 comp_df = comp_df[['accounts_account_uuid', 'new_sales_reporting_account_name', 'Sf Net Desk Change', 'new_sales_reporting_net_sales_1', 'Sf Looker Difference', 'Sf Looker Absolute Difference']]
 comp_df.rename(index=str, columns={"new_sales_reporting_account_name": "Billing Account Name", "accounts_account_uuid": "Account UUID", "new_sales_reporting_net_sales_1": "Looker Net Desk Change"}, inplace=True)

@@ -10,7 +10,7 @@ def create_salesforce_closed_lost_query(time_period, start_date, end_date):
 		left join (select uuid_c, id
 					from salesforce_v2.billing_account_c
 					group by uuid_c,id) as billing on opportunities.billing_account_c=billing.id
-		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and (lower(opportunities.contract_type_c) not like '%downgrade%' or opportunities.contract_type_c is null) and opportunities.region_name_c<>'India'
+		where stage_name='Closed Lost' and date_trunc (lower('{time_period}'), opportunities.close_date)::date>=TIMESTAMP '{start_date}' and date_trunc (lower('{time_period}'), opportunities.close_date)::date<TIMESTAMP '{end_date}' and opportunities.total_desks_reserved_net_c<0 and opportunities.region_name_c<>'India'
 		group by billing.uuid_c, date_trunc (lower('{time_period}'), opportunities.close_date)
 		''')
 
