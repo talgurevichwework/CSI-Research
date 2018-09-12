@@ -10,17 +10,20 @@ import csv
 start_date = '2018-08-01'
 end_date = '2018-09-01'# Not inclusive
 time_period = 'month'
+
+# file names
 output_file_destination = f'./Reports/looker_output{start_date}to{end_date}.csv'
 reuse_file_destination = f'./Reports/looker_reuse{start_date}to{end_date}.csv'
 fulloutput_file_destination = f'./Reports/looker_fulloutput{start_date}to{end_date}.csv'
 printoutput_file_destination = f'./Reports/looker_printoutput{start_date}to{end_date}.txt'
-test = f'./Reports/test{start_date}to{end_date}.csv'
+
+# test files by Tal
 output_file_sf_won = f'./Reports/sf_won{start_date}to{end_date}.csv'
 output_file_sf_lost = f'./Reports/sf_lost{start_date}to{end_date}.csv'
 output_file_sf_net = f'./Reports/sf_net{start_date}to{end_date}.csv'
 output_file_looker = f'./Reports/looker{start_date}to{end_date}.csv'
 output_file_looker_sf_merge = f'./Reports/outer_looker_sf_merge{start_date}to{end_date}.csv'
-
+test = f'./Reports/test{start_date}to{end_date}.csv'
 
 # Get query results as pandas dfs
 looker_df = we.get_tbl_query(queries_looker.create_looker_query(time_period, start_date, end_date))
@@ -50,6 +53,7 @@ comp_df.rename(index=str, columns={"new_sales_reporting_account_name": "Billing 
 return_df = comp_df[comp_df['Sf Looker Absolute Difference'] != 0]
 return_df.to_csv(output_file_destination, encoding='utf-8', index=False)
 
+# Create summary text file
 with open(printoutput_file_destination, "w") as text_file:
 	text_file.write('Date Frame: %s - %s\n' % (start_date, end_date))
 	text_file.write('Transaction Total: %d\n' % comp_df['Looker Net Desk Change'].sum())
@@ -59,8 +63,8 @@ with open(printoutput_file_destination, "w") as text_file:
 	text_file.write('Accounts Affected: %d\n' % comp_df['Account UUID'].nunique())
 
 # test file outputs
-sf_df.to_csv(output_file_sf_net , encoding='utf-8', index=False) #sf agregation
-looker_df.to_csv(output_file_looker , encoding='utf-8', index=False) #looker_df
-cw_df.to_csv(output_file_sf_won, encoding='utf-8', index=False) # sf opps
-cl_df.to_csv(output_file_sf_lost, encoding='utf-8', index=False) # sf opps
-comp_df.to_csv(output_file_looker_sf_merge, encoding='utf-8', index=False) #looker sf Merge
+#sf_df.to_csv(output_file_sf_net , encoding='utf-8', index=False) #sf agregation
+#looker_df.to_csv(output_file_looker , encoding='utf-8', index=False) #looker_df
+#cw_df.to_csv(output_file_sf_won, encoding='utf-8', index=False) # sf opps
+#cl_df.to_csv(output_file_sf_lost, encoding='utf-8', index=False) # sf opps
+#comp_df.to_csv(output_file_looker_sf_merge, encoding='utf-8', index=False) #looker sf Merge
