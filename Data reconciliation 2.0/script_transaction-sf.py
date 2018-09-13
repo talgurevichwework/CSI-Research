@@ -66,7 +66,7 @@ comp_df = comp_df.rename(index=str, columns={"account_name": "Account Name","acc
 return_df = comp_df[comp_df['Net Gap'] != 0]
 return_df['Reason'] = ""
 
-return_df['Reason'] = return_df.apply (lambda row: lsi.script_label_sync_issue(row, cl_nextmonth_df, re_df), axis=1)
+return_df['Reason'] = return_df.apply (lambda row: lsi.label_sync_issue(row, cl_nextmonth_df, re_df), axis=1)
 
 full_output = return_df.merge(re_df, how='left', left_on=['Contract UUID', 'Account UUID'], right_on=['membership_agreement_uuid', 'company_uuid'])
 
