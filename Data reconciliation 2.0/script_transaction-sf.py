@@ -1,9 +1,11 @@
 from we_module.we import We
-import queries
+import queries_sf
+import queries_dw
+import queries_sapi
 we = We(True)
 import pandas as pd
 import csv
-import label_sync_issue as lsi
+import script_label_sync_issue as lsi
 from dateutil.relativedelta import relativedelta as rd
 from datetime import datetime as dt
 
@@ -18,14 +20,14 @@ fulloutput_file_destination = f'./Reports/transaction_fulloutput{start_date}to{e
 printoutput_file_destination = f'./Reports/transaction_printoutput{start_date}to{end_date}.txt'
 
 # Get query results as pandas dfs
-vtrans_df = we.get_tbl_query(queries.create_vtrans_query_notrunc(start_date, end_date))
-cw_df = we.get_tbl_query(queries.create_salesforce_closedwon_query_notrunc(start_date, end_date))
-cl_df = we.get_tbl_query(queries.create_salesforce_closedlost_query_notrunc(start_date, end_date))
+vtrans_df = we.get_tbl_query(queries_dw.create_vtrans_query_notrunc(start_date, end_date))
+cw_df = we.get_tbl_query(queries_sf.create_salesforce_closedwon_query_notrunc(start_date, end_date))
+cl_df = we.get_tbl_query(queries_sf.create_salesforce_closedlost_query_notrunc(start_date, end_date))
 cl_nextmonth_df = we.get_tbl_query(f'''select o.reservation_uuid_c, o.contract_uuid_c, o.total_desks_reserved_net_c, o.close_date
 	from salesforce_v2.opportunity o
 	where o.close_date >= TIMESTAMP '{start_date_nextmonth}' and o.close_date < TIMESTAMP '{end_date_nextmonth}' and o.total_desks_reserved_net_c < 0
 	''')
-re_df = we.get_tbl_query(queries.create_sapi_reuserecords_query_notrunc(start_date, end_date))
+re_df = we.get_tbl_query(queries_sapi.create_sapi_reuserecords_query_notrunc(start_date, end_date))
 
 # Merge closed won and closed lost tables
 sf_df = cl_df.merge(cw_df, left_on=['contract_uuid_c'], right_on=['contract_uuid_c'], how='outer')

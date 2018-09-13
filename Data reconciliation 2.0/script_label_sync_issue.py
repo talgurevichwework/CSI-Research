@@ -1,5 +1,6 @@
 from we_module.we import We
-import queries
+import queries_dw
+import queries_sf
 import pandas as pd
 from datetime import datetime as dt
 from dateutil.relativedelta import relativedelta
@@ -7,11 +8,11 @@ we = We(True)
 
 # input : reservation uuid (string)
 # output : true if reservation_uuid has move in before 2017-11-01
-def check_hd_nomomi(reservation_uuid): 
+def check_hd_nomomi(reservation_uuid):
 	hd_df = we.get_tbl_query(queries.create_hd_opp_query(reservation_uuid, 'movein'))
 	if len(hd_df['close_date'].values) == 0:
 		return False
-	close_date = hd_df['close_date'].values[0] 
+	close_date = hd_df['close_date'].values[0]
 	return (close_date < dt.date(dt.strptime('2017-11-01', "%Y-%m-%d")))
 
 # input : reservation uuid (string)
@@ -26,13 +27,13 @@ def check_mo_nextmonth(reservation_uuid, cl_nextmonth_df): # Returns True if the
 	res_df = cl_nextmonth_df[(cl_nextmonth_df['reservation_uuid_c']==reservation_uuid) | (cl_nextmonth_df['contract_uuid_c']==reservation_uuid)]
 	return(len(res_df['total_desks_reserved_net_c'].values) >= 1 and res_df['total_desks_reserved_net_c'].values[0] == -1)
 
-# input : 
+# input :
 # 1) pandas row from return_df - must contain row['Account Name'], row['Contract UUID'], row['Country Code'], row['Vtrans Count'], row['Salesforce Count']
 # 2) salesforce_v2.opportunity table covering from one month + start date to one month + end date
 # 3) sales_api_public.opportunity_reuse_records table within given time frame
-# output : string containing sync error reason 
+# output : string containing sync error reason
 def label_sync_issue(row, cl_nextmonth_df, re_df):
-	if type(row['Account Name']) == 'str' and "WeWork" in row['Account Name']: 
+	if type(row['Account Name']) == 'str' and "WeWork" in row['Account Name']:
 		return ('WeWork account')
 	# if row['Country Code'] == 'CHN' and row['Vtrans Count'] < 0:
 		return('China moveout')

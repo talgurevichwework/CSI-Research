@@ -26,3 +26,9 @@ with vtrans as (select v.account_name,
 				from vtrans
 				group by account_name, account_uuid, contract_uuid, country_code
 		''')
+
+# Returns date frame with reservations connected to given reservation uuid
+def create_hd_res_query(reservation_uuid):
+	return(f'''
+			select * from dw.v_transaction v where v.reservation_uuid='{reservation_uuid}'
+		''')
