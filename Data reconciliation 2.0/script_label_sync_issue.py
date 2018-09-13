@@ -9,7 +9,7 @@ we = We(True)
 # input : reservation uuid (string)
 # output : true if reservation_uuid has move in before 2017-11-01
 def check_hd_nomomi(reservation_uuid):
-	hd_df = we.get_tbl_query(queries.create_hd_opp_query(reservation_uuid, 'movein'))
+	hd_df = we.get_tbl_query(queries_sf.create_hd_opp_query(reservation_uuid, 'movein'))
 	if len(hd_df['close_date'].values) == 0:
 		return False
 	close_date = hd_df['close_date'].values[0]
@@ -18,7 +18,7 @@ def check_hd_nomomi(reservation_uuid):
 # input : reservation uuid (string)
 # output : true if reservation has move in and move out on same day
 def check_hd_mimo_sametime(reservation_uuid):
-	hd_df = we.get_tbl_query(queries.create_hd_res_query(reservation_uuid))
+	hd_df = we.get_tbl_query(queries_dw.create_hd_res_query(reservation_uuid))
 	return (len(hd_df['date_reserved_local'].values) == 2 and hd_df['date_reserved_local'].values[0] == hd_df['date_reserved_local'].values[1])
 
 # input : reservation uuid (string), salesforce_v2.opportunity table covering from one month + start date to one month + end date
