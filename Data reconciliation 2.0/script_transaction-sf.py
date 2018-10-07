@@ -64,8 +64,13 @@ comp_df['country_code'] = comp_df['country_code'].fillna(comp_df['country_code_c
 comp_df = comp_df[['account_name', 'account_uuid', 'opp_name_c', 'country_code', 'contract_uuid', 'Salesforce Count', 'desks_changed', 'Net Gap', 'Absolute Gap']]
 comp_df = comp_df.rename(index=str, columns={"account_name": "Account Name","account_uuid": "Account UUID", "opp_name_c": "Opportunity Name", "country_code": "Country Code", "contract_uuid": "Contract UUID", "desks_changed": "Vtrans Count"})
 return_df = comp_df[comp_df['Net Gap'] != 0]
+#before the labeling of sync issues function begins, which takes a long time to run based on return_df size, this will provide a printout of the number of rows invovled, i.e. the number of uuids that are about to be checked
+total_rows=0
+total_rows=return_df.shape[0]
+print ("The number of UUIDs about to be analyzed is: ", total_rows)
+return_df.to_csv(output_file_destination, encoding='utf-8', index=False)
 return_df['Reason'] = ""
-
+return_df.to_csv(output_file_destination, encoding='utf-8', index=False)
 return_df['Reason'] = return_df.apply (lambda row: lsi.label_sync_issue(row, cl_nextmonth_df, re_df), axis=1)
 
 full_output = return_df.merge(re_df, how='left', left_on=['Contract UUID', 'Account UUID'], right_on=['membership_agreement_uuid', 'company_uuid'])

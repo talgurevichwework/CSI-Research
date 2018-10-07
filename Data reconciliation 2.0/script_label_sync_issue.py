@@ -35,17 +35,24 @@ def check_mo_nextmonth(reservation_uuid, cl_nextmonth_df): # Returns True if the
 def label_sync_issue(row, cl_nextmonth_df, re_df):
 	if type(row['Account Name']) == 'str' and "WeWork" in row['Account Name']:
 		return ('WeWork account')
-	# if row['Country Code'] == 'CHN' and row['Vtrans Count'] < 0:
+		print('WeWork Account')
+	if row['Country Code'] == 'CHN' and row['Vtrans Count'] < 0:
 		return('China moveout')
+		print ('China moveout')
 	if row['Contract UUID']=='':
 		return ('Unable to connect reservation to a membership agreement')
+		print ('Unable to connect reservation to a membership agreement')
 	if row['Vtrans Count'] < row['Salesforce Count'] and check_mo_nextmonth(row['Contract UUID'], cl_nextmonth_df):
 		return ('HD move out one month late')
+		print ('HD move out one month late')
 	if row['Vtrans Count'] == 0 and row['Salesforce Count'] == 1 and check_hd_mimo_sametime(row['Contract UUID']): # HD move in and move out in same period
 		return ('HD move in and move out at same time')
+		print ('HD move in and move out at same time')
 	if row['Vtrans Count'] == -1 and row['Salesforce Count'] == 0 and check_hd_nomomi(row['Contract UUID']): # HD move out missed by sf
 		return ('Old HD missing move in and move out')
+		Print ('Old HD missing move in and move out')
 	if row['Contract UUID'] in re_df['membership_agreement_uuid'].values: # reservation is in reuse logic table
-		return('Possible issue with reuse logic')
+		return ('Possible issue with reuse logic')
+		print('Possible issue with reuse logic')
 	else:
 		return ("")
