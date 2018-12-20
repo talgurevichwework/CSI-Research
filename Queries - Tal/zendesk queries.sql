@@ -40,3 +40,17 @@ where t.created_at >= '2017-01-01'
 and t.custom_digital_category = 'enterprise_dig_cat'
 and status = 'solved'
 ;
+
+SELECT "tag", count(tg.ticket_id), avg(EXTRACT(HOURS FROM (t.updated_at - t.created_at))) as diff, date_part(month, t.created_at) date
+FROM digital_zendesk.ticket_tag tg
+join digital_zendesk.ticket t on t.id = tg.ticket_id
+where t.created_at > '2018-01-01'
+and lower("tag") = 'manual_paperwork_ent_cat' -- ('%enterprise%') or lower("tag") like '%manual%') or lower("tag") like '%contract%'
+group by "tag", date
+order by count DESC
+
+;
+
+select distinct count(t.id), t.custom_root_cause_category as root
+from digital_zendesk.ticket t
+group by root;
